@@ -25,7 +25,8 @@
 /// \warning В случае ошибки процессы не генерируют исключение, а <b>только</b>
 /// вызывают функцию ILogger::err(const LogId&, const char*, ...) переданного
 /// регистратора (Логгера).
-struct ILogger {
+struct ILogger
+{
 public:
 	//---------------------------------------------------------------------------
 	/// Тип идентификатора сообщений и процессов.
@@ -51,11 +52,13 @@ protected: // Функции, которые надо переопределит
 	/// \param msg - текст сообщения по умолчанию (на английском языке).
 	/// \return - транслированное сообщение.
 	/// \note По умолчанию данная функция возвращает тоже сообщение, что и получила на вход.
-	virtual Msg msgTranslate(const LogId& id, const char* msg) const {
+	virtual Msg msgTranslate(const LogId& id, const char* msg) const
+	{
 		// Для отображение параметра типа "время" используется специальный ключ %t, для логов просто переводим его в %f
 		Msg str = msg;
 		size_t start_pos = 0;
-		while ((start_pos = str.find("%t")) != std::string::npos) {
+		while ((start_pos = str.find("%t")) != std::string::npos)
+		{
 			str[start_pos + 1] = 'f';
 		}
 		return str;
@@ -77,17 +80,18 @@ public:
 	/// \param id  - идентификатор сообщения.
 	/// \param msg - тело сообщения в формате функции \c printf().
 	/// \param ... - набор данных для вывода в сообщении по принципу \c printf().
-	void inf(const LogId& id, const char* msg, ...) const {
-		char* str = new char[max_msg_size];
-		try {
+	void inf(const LogId& id, const char* msg, ...) const
+	{
+		std::string str(max_msg_size, 0);
+		try
+		{
 			va_list marker;
 			va_start(marker, msg);
-			vsnprintf(str, max_msg_size, msgTranslate(id, msg).c_str(), marker);
+			vsnprintf(str.data(), max_msg_size, msgTranslate(id, msg).c_str(), marker);
 			va_end(marker);
 			infOut(str, id);
 		}
 		catch (...) {}
-		delete[] str;
 	}
 	//---------------------------------------------------------------------------
 	/// Регистрация информационного сообщения.
@@ -95,17 +99,18 @@ public:
 	/// \param id  - идентификатор сообщения.
 	/// \param msg - тело сообщения в формате функции \c printf().
 	/// \param ... - набор данных для вывода в сообщении по принципу \c printf().
-	void log(const LogId& id, const char* msg, ...) const {
-		char* str = new char[max_msg_size];
-		try {
+	void log(const LogId& id, const char* msg, ...) const
+	{
+		std::string str(max_msg_size, 0);
+		try
+		{
 			va_list marker;
 			va_start(marker, msg);
-			vsnprintf(str, max_msg_size, msgTranslate(id, msg).c_str(), marker);
+			vsnprintf(str.data(), max_msg_size, msgTranslate(id, msg).c_str(), marker);
 			va_end(marker);
 			logOut(str, id);
 		}
 		catch (...) {}
-		delete[] str;
 	}
 	/// Регистрация предупреждения (warning) и не фатальной ошибки.
 	/// Регистрация предупреждения (warning) и не фатальной ошибки в ходе 
@@ -113,53 +118,56 @@ public:
 	/// \param id  - идентификатор сообщения.
 	/// \param msg - тело сообщения в формате функции \c printf().
 	/// \param ... - набор данных для вывода в сообщении по принципу \c printf().
-	void wrn(const LogId& id, const char* msg, ...) const {
-		char* str = new char[max_msg_size];
-		try {
+	void wrn(const LogId& id, const char* msg, ...) const
+	{
+		std::string str(max_msg_size, 0);
+		try
+		{
 			va_list marker;
 			va_start(marker, msg);
-			vsnprintf(str, max_msg_size, msgTranslate(id, msg).c_str(), marker);
+			vsnprintf(str.data(), max_msg_size, msgTranslate(id, msg).c_str(), marker);
 			va_end(marker);
 			wrnOut(str, id);
 		}
 		catch (...) {}
-		delete[] str;
 	}
 	/// Регистрация фатальной ошибки. 
 	/// Регистрация фатальной ошибки, после которой результаты процесса не определены.
 	/// \param id  - идентификатор сообщения.
 	/// \param msg - тело сообщения в формате функции \c printf().
 	/// \param ... - набор данных для вывода в сообщении по принципу \c printf().
-	void err(const LogId& id, const char* msg, ...) const {
-		char* str = new char[max_msg_size];
-		try {
+	void err(const LogId& id, const char* msg, ...) const
+	{
+		std::string str(max_msg_size, 0);
+		try
+		{
 			va_list marker;
 			va_start(marker, msg);
-			vsnprintf(str, max_msg_size, msgTranslate(id, msg).c_str(), marker);
+			vsnprintf(str.data(), max_msg_size, msgTranslate(id, msg).c_str(), marker);
 			va_end(marker);
 			errOut(str, id);
 		}
 		catch (...) {}
-		delete[] str;
 	}
 	/// Регистрация отладочных сообщений ошибки. 
 	/// Регистрация фатальной ошибки, после которой результаты процесса не определены.
 	/// \param id  - идентификатор сообщения.
 	/// \param msg - тело сообщения в формате функции \c printf().
 	/// \param ... - набор данных для вывода в сообщении по принципу \c printf().
-	inline void dbg(const char* msg, ...) const {
+	inline void dbg(const char* msg, ...) const
+	{
 #ifdef _DEBUG
-		char* str = new char[max_msg_size + 6];
-		strcpy(str, "DEBUG:");
-		try {
+		std::string str(max_msg_size, 0);
+		strcpy(str.data(), "DEBUG:");
+		try
+		{
 			va_list marker;
 			va_start(marker, msg);
-			vsnprintf(str + 6, max_msg_size, msg, marker);
+			vsnprintf(str.data() + 6, max_msg_size - 6, msg, marker);
 			va_end(marker);
 			logOut(str, "dbg");
 		}
 		catch (...) {}
-		delete[] str;
 #endif //#ifdef _DEBUG
 	}
 	/// Параметр логгирования
@@ -181,14 +189,16 @@ public:
 /// 
 /// по умолчанию никакой логгер не указан.
 /// \see Logger
-struct Logger : public ILogger {
+struct Logger : public ILogger
+{
 private: // Указатели на регистраторы на которые транслируются сообщения
 	mutable std::shared_ptr<ILogger> personal_logger;   // Персональный логгер данного объекта.
 	mutable std::shared_ptr<ILogger> parent_logger;     // Родительский логгер, используется если не указан перссональный.
 	/// Логгер данного объекта.
 	/// Функция возварщает персональный логер данного объекта если он есть, 
 	/// или общий логгер если его нет. Если нет ни того не другого функция вернет NULL.
-	std::shared_ptr<ILogger> logger() const {
+	std::shared_ptr<ILogger> logger() const
+	{
 		if (personal_logger != NULL) return personal_logger;
 		else if (parent_logger != NULL) return parent_logger;
 		else return NULL;
@@ -212,7 +222,8 @@ private:
 	/// По умолчанию она его обнуляет.
 	void setParentLogger(std::shared_ptr<ILogger> l = NULL) const { personal_logger = l; }
 public:  // Реализация функций Logger-а.
-	virtual Msg msgTranslate(const LogId& id, const char* msg) const {
+	virtual Msg msgTranslate(const LogId& id, const char* msg) const
+	{
 		if (logger()) return logger()->msgTranslate(id, msg);
 		else return msg;
 	}
@@ -222,7 +233,8 @@ public:  // Реализация функций Logger-а.
 	virtual void errOut(const Msg& msg, const LogId& id) const { if (logger()) logger()->errOut(msg, id); }
 public:
 	/// Параметр логгирования
-	virtual double logParam(int param) const {
+	virtual double logParam(int param) const
+	{
 		if (logger()) return logger()->logParam(param);
 		else return 0.;
 	};
